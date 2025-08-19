@@ -1,32 +1,6 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-# -----------------------------------------------------------------------
-# We don't support docker compose for production environments.
-# If you choose to use this type of deployment make sure to
-# create you own docker environment file (docker/.env) with your own
-# unique random secure passwords and SECRET_KEY.
-#
-# For verbose logging during development:
-# - Set SUPERSET_LOG_LEVEL=debug in docker/.env-local for detailed Superset logs
-# -----------------------------------------------------------------------
 x-superset-image: &superset-image apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
 x-superset-volumes:
-  &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
+  &superset-volumes
   - ./docker:/app/docker
   - /var/www/apache_superset/superset_home:/app/superset_home
 
@@ -40,23 +14,19 @@ services:
 
   db:
     env_file:
-      - path: docker/.env # default
-        required: true
-      - path: docker/.env-local # optional override
-        required: false
+      - docker/.env
+      - docker/.env-local
     image: postgres:16
     container_name: superset_db
     restart: unless-stopped
     volumes:
-      - db_home:/var/lib/postgresql/data
+      - /var/www/apache_superset/db_home:/var/lib/postgresql/data
       - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
 
   superset:
     env_file:
-      - path: docker/.env # default
-        required: true
-      - path: docker/.env-local # optional override
-        required: false
+      - docker/.env
+      - docker/.env-local
     image: *superset-image
     container_name: superset_app
     command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
@@ -74,10 +44,8 @@ services:
     container_name: superset_init
     command: ["/app/docker/docker-init.sh"]
     env_file:
-      - path: docker/.env # default
-        required: true
-      - path: docker/.env-local # optional override
-        required: false
+      - docker/.env
+      - docker/.env-local
     depends_on:
       db:
         condition: service_started
@@ -93,10 +61,8 @@ services:
     container_name: superset_worker
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file:
-      - path: docker/.env # default
-        required: true
-      - path: docker/.env-local # optional override
-        required: false
+      - docker/.env
+      - docker/.env-local
     restart: unless-stopped
     depends_on:
       superset-init:
@@ -115,10 +81,8 @@ services:
     container_name: superset_worker_beat
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
     env_file:
-      - path: docker/.env # default
-        required: true
-      - path: docker/.env-local # optional override
-        required: false
+      - docker/.env
+      - docker/.env-local
     restart: unless-stopped
     depends_on:
       superset-init:
@@ -127,11 +91,3 @@ services:
     volumes: *superset-volumes
     healthcheck:
       disable: true
-
-volumes:
-  superset_home:
-    external: false
-  db_home:
-    external: false
-  redis:
-    external: false
