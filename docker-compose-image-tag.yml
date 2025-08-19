@@ -15,7 +15,7 @@ services:
   db:
     env_file:
       - docker/.env
-      - docker/.env-local
+      #- docker/.env-local
     image: postgres:16
     container_name: superset_db
     restart: unless-stopped
@@ -26,7 +26,7 @@ services:
   superset:
     env_file:
       - docker/.env
-      - docker/.env-local
+      #- docker/.env-local
     image: *superset-image
     container_name: superset_app
     command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
@@ -45,7 +45,7 @@ services:
     command: ["/app/docker/docker-init.sh"]
     env_file:
       - docker/.env
-      - docker/.env-local
+      #- docker/.env-local
     depends_on:
       db:
         condition: service_started
@@ -62,7 +62,7 @@ services:
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file:
       - docker/.env
-      - docker/.env-local
+      #- docker/.env-local
     restart: unless-stopped
     depends_on:
       superset-init:
@@ -82,7 +82,7 @@ services:
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
     env_file:
       - docker/.env
-      - docker/.env-local
+      #- docker/.env-local
     restart: unless-stopped
     depends_on:
       superset-init:
